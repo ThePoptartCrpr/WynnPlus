@@ -1,0 +1,9 @@
+{
+  "name": "WynnPlus",
+  "description": "",
+  "author": "builder_247 and ThePoptartCrpr",
+  "version": "0.1",
+  "requires": [
+    "SettingsManager"
+  ]
+}
