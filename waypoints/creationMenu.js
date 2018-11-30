@@ -21,8 +21,20 @@ function wp_openWaypointCreationGui() {
   wp_waypointGui.open();
 }
 
-wp_waypointGui.registerClicked(function() {
-  ChatLib.chat('wee');
+wp_waypointGui.registerClicked(function(mouseX, mouseY, button) {
+  if (button == 0) {
+    wp_waypointGuiElements.forEach(function(element) {
+      element.click();
+    });
+  }
+});
+
+wp_waypointGui.registerMouseReleased(function(mouseX, mouseY, button) {
+  if (button == 0) {
+    wp_waypointGuiElements.forEach(function(element) {
+      if (element.release) element.release();
+    });
+  }
 });
 
 register('step', function() {
@@ -66,6 +78,10 @@ function wp_waypointBaseElement() {
 
   }
 
+  this.click = function() {
+
+  }
+
   this.draw = function(x, y, mouseX, mouseY) {
 
   }
@@ -80,6 +96,10 @@ function wp_waypointTitleElement(title) {
   this.step = function() {
     this.y = easeOut(this.y, 20, 6);
     this.alpha = easeOut(this.alpha, 255, 10);
+  }
+
+  this.click = function() {
+
   }
 
   this.draw = function(x, y, mouseX, mouseY) {
@@ -111,10 +131,13 @@ function wp_waypointInvisElement() {
   this.yGoal = undefined;
   this.y = undefined;
 
-
   this.step = function() {
     if (this.y) this.y = easeOut(this.y, this.yGoal, 6);
     this.alpha = easeOut(this.alpha, 255, 10);
+  }
+
+  this.click = function() {
+
   }
 
   this.draw = function(x, y, mouseX, mouseY) {
@@ -136,6 +159,10 @@ function wp_waypointTextElement(desc) {
   this.step = function() {
     // if (this.y) this.y = easeOut(this.y, this.yGoal, 6);
     this.alpha = easeOut(this.alpha, 255, 10);
+  }
+
+  this.click = function() {
+
   }
 
   this.draw = function(x, y, mouseX, mouseY) {
@@ -181,38 +208,56 @@ function wp_waypointColorElement(title) {
     }
   };
   this.hover = 0;
+  this.selected = 0;
+  this.mouseX = 0, this.mouseY = 0;
   this.desc = title;
   this.alpha = 0;
 
   this.step = function() {
     this.alpha = easeOut(this.alpha, 255, 10);
 
-    if (this.hover == 1) {
+    if (this.hover == 1 && (this.selected == 1 || this.selected == 0)) {
       this.sliders.r.width = easeOut(this.sliders.r.width, 5, 10);
       this.sliders.r.color = easeOut(this.sliders.r.color, 255, 10);
-    } else {
+    } else if (this.selected == 0) {
       this.sliders.r.width = easeOut(this.sliders.r.width, 3, 10);
       this.sliders.r.color = easeOut(this.sliders.r.color, 170, 10);
     }
-    if (this.hover == 2) {
+    if (this.hover == 2 && (this.selected == 2 || this.selected == 0)) {
       this.sliders.g.width = easeOut(this.sliders.g.width, 5, 10);
       this.sliders.g.color = easeOut(this.sliders.g.color, 255, 10);
-    } else {
+    } else if (this.selected == 0) {
       this.sliders.g.width = easeOut(this.sliders.g.width, 3, 10);
       this.sliders.g.color = easeOut(this.sliders.g.color, 170, 10);
     }
-    if (this.hover == 3) {
+    if (this.hover == 3 && (this.selected == 3 || this.selected == 0)) {
       this.sliders.b.width = easeOut(this.sliders.b.width, 5, 10);
       this.sliders.b.color = easeOut(this.sliders.b.color, 255, 10);
-    } else {
+    } else if (this.selected == 0) {
       this.sliders.b.width = easeOut(this.sliders.b.width, 3, 10);
       this.sliders.b.color = easeOut(this.sliders.b.color, 170, 10);
     }
+
+    if (this.selected == 1) {
+      ChatLib.chat('asdf ' + Math.round(this.mouseX / (0 - 100 + (Renderer.screen.getWidth() / 2) - 170)));
+      // this.mouseX - 100 + (Renderer.screen.getWidth() / 2) - 170)
+    };
+  }
+
+  this.click = function() {
+    if (this.hover != 0) this.selected = this.hover;
+  }
+
+  this.release = function() {
+    this.selected = 0;
   }
 
   // Text
   this.draw = function(x, y, mouseX, mouseY) {
     // Calculate hover
+    this.mouseX = mouseX;
+    this.mouseY = mouseY;
+
     if (mouseX > 100 && mouseX < (Renderer.screen.getWidth() / 2) - 70) {
       if (mouseY > y + 12 && mouseY < y + 32) this.hover = 1;
       else if (mouseY > y + 32 && mouseY < y + 52) this.hover = 2;
