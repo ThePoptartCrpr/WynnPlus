@@ -163,18 +163,64 @@ function wp_waypointTextElement(desc) {
 function wp_waypointColorElement(title) {
   this.color = {
     r: 255,
-    g: 255,
+    g: 55,
     b: 255
   };
+  this.sliders = {
+    r: {
+      width: 3,
+      color: 170
+    },
+    g: {
+      width: 3,
+      color: 170
+    },
+    b: {
+      width: 3,
+      color: 170
+    }
+  };
+  this.hover = 0;
   this.desc = title;
   this.alpha = 0;
 
   this.step = function() {
     this.alpha = easeOut(this.alpha, 255, 10);
+
+    if (this.hover == 1) {
+      this.sliders.r.width = easeOut(this.sliders.r.width, 5, 10);
+      this.sliders.r.color = easeOut(this.sliders.r.color, 255, 10);
+    } else {
+      this.sliders.r.width = easeOut(this.sliders.r.width, 3, 10);
+      this.sliders.r.color = easeOut(this.sliders.r.color, 170, 10);
+    }
+    if (this.hover == 2) {
+      this.sliders.g.width = easeOut(this.sliders.g.width, 5, 10);
+      this.sliders.g.color = easeOut(this.sliders.g.color, 255, 10);
+    } else {
+      this.sliders.g.width = easeOut(this.sliders.g.width, 3, 10);
+      this.sliders.g.color = easeOut(this.sliders.g.color, 170, 10);
+    }
+    if (this.hover == 3) {
+      this.sliders.b.width = easeOut(this.sliders.b.width, 5, 10);
+      this.sliders.b.color = easeOut(this.sliders.b.color, 255, 10);
+    } else {
+      this.sliders.b.width = easeOut(this.sliders.b.width, 3, 10);
+      this.sliders.b.color = easeOut(this.sliders.b.color, 170, 10);
+    }
   }
 
   // Text
   this.draw = function(x, y, mouseX, mouseY) {
+    // Calculate hover
+    if (mouseX > 100 && mouseX < (Renderer.screen.getWidth() / 2) - 70) {
+      if (mouseY > y + 12 && mouseY < y + 32) this.hover = 1;
+      else if (mouseY > y + 32 && mouseY < y + 52) this.hover = 2;
+      else if (mouseY > y + 52 && mouseY < y + 72) this.hover = 3;
+      else this.hover = 0;
+    } else this.hover = 0;
+
+    // Draw
     Renderer.text(
       this.desc,
       110,
@@ -213,6 +259,33 @@ function wp_waypointColorElement(title) {
       y + 60,
       (Renderer.screen.getWidth() / 2) - 170,
       3
+    );
+
+    // Red slider
+    Renderer.drawRect(
+      Renderer.color(this.sliders.r.color, this.sliders.r.color, this.sliders.r.color, this.alpha),
+      100 + (((Renderer.screen.getWidth() / 2) - 170) * (this.color.r / 255)) - (this.sliders.r.width / 2),
+      y + 16,
+      this.sliders.r.width,
+      11
+    );
+
+    // Green slider
+    Renderer.drawRect(
+      Renderer.color(this.sliders.g.color, this.sliders.g.color, this.sliders.g.color, this.alpha),
+      100 + (((Renderer.screen.getWidth() / 2) - 170) * (this.color.g / 255)) - (this.sliders.g.width / 2),
+      y + 36,
+      this.sliders.g.width,
+      11
+    );
+
+    // Blue slider
+    Renderer.drawRect(
+      Renderer.color(this.sliders.b.color, this.sliders.b.color, this.sliders.b.color, this.alpha),
+      100 + (((Renderer.screen.getWidth() / 2) - 170) * (this.color.b / 255)) - (this.sliders.b.width / 2),
+      y + 56,
+      this.sliders.b.width,
+      11
     );
 
     // Color preview
