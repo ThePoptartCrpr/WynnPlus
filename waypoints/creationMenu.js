@@ -239,9 +239,30 @@ function wp_waypointColorElement(title) {
     }
 
     if (this.selected == 1) {
-      ChatLib.chat('asdf ' + Math.round(this.mouseX / (0 - 100 + (Renderer.screen.getWidth() / 2) - 170)));
-      // this.mouseX - 100 + (Renderer.screen.getWidth() / 2) - 170)
-    };
+      // Calculate slide
+      var slide = Math.round(((this.mouseX - 100) / ((Renderer.screen.getWidth() / 2) - 170)) * 255);
+      if (slide < 0) slide = 0;
+      if (slide > 255) slide = 255;
+
+      // Apply slide
+      if (this.color.r != slide) this.color.r = slide;
+    } else if (this.selected == 2) {
+      // Calculate slide
+      var slide = Math.round(((this.mouseX - 100) / ((Renderer.screen.getWidth() / 2) - 170)) * 255);
+      if (slide < 0) slide = 0;
+      if (slide > 255) slide = 255;
+
+      // Apply slide
+      if (this.color.g != slide) this.color.g = slide;
+    } else if (this.selected == 3) {
+      // Calculate slide
+      var slide = Math.round(((this.mouseX - 100) / ((Renderer.screen.getWidth() / 2) - 170)) * 255);
+      if (slide < 0) slide = 0;
+      if (slide > 255) slide = 255;
+
+      // Apply slide
+      if (this.color.b != slide) this.color.b = slide;
+    }
   }
 
   this.click = function() {
