@@ -209,12 +209,20 @@ function wp_waypointColorElement(title) {
   };
   this.hover = 0;
   this.selected = 0;
+  this.x = 0, this.y = 0;
   this.mouseX = 0, this.mouseY = 0;
   this.desc = title;
   this.alpha = 0;
 
   this.step = function() {
     this.alpha = easeOut(this.alpha, 255, 10);
+
+    if (this.mouseX > 100 && this.mouseX < (Renderer.screen.getWidth() / 2) - 70) {
+      if (this.mouseY > this.y + 12 && this.mouseY < this.y + 32) this.hover = 1;
+      else if (this.mouseY > this.y + 32 && this.mouseY < this.y + 52) this.hover = 2;
+      else if (this.mouseY > this.y + 52 && this.mouseY < this.y + 72) this.hover = 3;
+      else this.hover = 0;
+    } else this.hover = 0;
 
     if (this.hover == 1 && (this.selected == 1 || this.selected == 0)) {
       this.sliders.r.width = easeOut(this.sliders.r.width, 5, 10);
@@ -261,16 +269,10 @@ function wp_waypointColorElement(title) {
 
   // Text
   this.draw = function(x, y, mouseX, mouseY) {
-    // Calculate hover
+    // Set values
     this.mouseX = mouseX;
     this.mouseY = mouseY;
-
-    if (mouseX > 100 && mouseX < (Renderer.screen.getWidth() / 2) - 70) {
-      if (mouseY > y + 12 && mouseY < y + 32) this.hover = 1;
-      else if (mouseY > y + 32 && mouseY < y + 52) this.hover = 2;
-      else if (mouseY > y + 52 && mouseY < y + 72) this.hover = 3;
-      else this.hover = 0;
-    } else this.hover = 0;
+    this.y = y;
 
     // Draw
     Renderer.text(
