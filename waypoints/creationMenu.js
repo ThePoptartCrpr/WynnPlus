@@ -221,47 +221,33 @@ function wp_waypointColorElement(title) {
       this.sliders.r.color = easeOut(this.sliders.r.color, 255, 10);
     } else if (this.selected == 0) {
       this.sliders.r.width = easeOut(this.sliders.r.width, 3, 10);
-      this.sliders.r.color = easeOut(this.sliders.r.color, 170, 10);
+      this.sliders.r.color = easeOut(this.sliders.r.color, 200, 10);
     }
     if (this.hover == 2 && (this.selected == 2 || this.selected == 0)) {
       this.sliders.g.width = easeOut(this.sliders.g.width, 5, 10);
       this.sliders.g.color = easeOut(this.sliders.g.color, 255, 10);
     } else if (this.selected == 0) {
       this.sliders.g.width = easeOut(this.sliders.g.width, 3, 10);
-      this.sliders.g.color = easeOut(this.sliders.g.color, 170, 10);
+      this.sliders.g.color = easeOut(this.sliders.g.color, 200, 10);
     }
     if (this.hover == 3 && (this.selected == 3 || this.selected == 0)) {
       this.sliders.b.width = easeOut(this.sliders.b.width, 5, 10);
       this.sliders.b.color = easeOut(this.sliders.b.color, 255, 10);
     } else if (this.selected == 0) {
       this.sliders.b.width = easeOut(this.sliders.b.width, 3, 10);
-      this.sliders.b.color = easeOut(this.sliders.b.color, 170, 10);
+      this.sliders.b.color = easeOut(this.sliders.b.color, 200, 10);
     }
 
-    if (this.selected == 1) {
+    if (this.selected != 0) {
       // Calculate slide
       var slide = Math.round(((this.mouseX - 100) / ((Renderer.screen.getWidth() / 2) - 170)) * 255);
       if (slide < 0) slide = 0;
       if (slide > 255) slide = 255;
 
       // Apply slide
-      if (this.color.r != slide) this.color.r = slide;
-    } else if (this.selected == 2) {
-      // Calculate slide
-      var slide = Math.round(((this.mouseX - 100) / ((Renderer.screen.getWidth() / 2) - 170)) * 255);
-      if (slide < 0) slide = 0;
-      if (slide > 255) slide = 255;
-
-      // Apply slide
-      if (this.color.g != slide) this.color.g = slide;
-    } else if (this.selected == 3) {
-      // Calculate slide
-      var slide = Math.round(((this.mouseX - 100) / ((Renderer.screen.getWidth() / 2) - 170)) * 255);
-      if (slide < 0) slide = 0;
-      if (slide > 255) slide = 255;
-
-      // Apply slide
-      if (this.color.b != slide) this.color.b = slide;
+      if (this.selected == 1 && this.color.r != slide) this.color.r = slide;
+      else if (this.selected == 2 && this.color.g != slide) this.color.g = slide;
+      else if (this.selected == 3 && this.color.b != slide) this.color.b = slide;
     }
   }
 
