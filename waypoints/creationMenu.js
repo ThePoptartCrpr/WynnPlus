@@ -37,6 +37,12 @@ wp_waypointGui.registerMouseReleased(function(mouseX, mouseY, button) {
   }
 });
 
+wp_waypointGui.registerKeyTyped(function(char, keyCode) {
+  wp_waypointGuiElements.forEach(function(element) {
+    if (element.onKeyTyped) element.onKeyTyped();
+  });
+});
+
 register('step', function() {
   if (wp_waypointGui.isOpen()) {
     wp_bgAlpha = easeOut(wp_bgAlpha, 150, 10);
