@@ -42,7 +42,7 @@ function wp_gui() {
     this.elements.creation.elements = [
       [],
       []
-    ]
+    ];
 
     // Add elements
     this.elements.creation.elements[0].push(new wp_waypointBackButtonElement());
@@ -50,6 +50,9 @@ function wp_gui() {
     this.elements.creation.elements[0].push(new wp_waypointInvisElement());
     this.elements.creation.elements[0].push(new wp_waypointTextElement('Name:'));
     this.elements.creation.elements[0].push(new wp_waypointColorElement('Color'));
+
+    this.elements.creation.elements[1].push(new wp_waypointInvisElement());
+    this.elements.creation.elements[1].push(new wp_waypointTextElement('Test!'));
 
     // Open
     wp_waypointGui.open();
@@ -97,13 +100,13 @@ function wp_gui() {
 
   this.draw = function(mouseX, mouseY) {
     // Variables
-    var x = Renderer.screen.getWidth() / 2, y = 20;
+    var x = 100, y = 20;
 
     // Background
     Renderer.drawRect(Renderer.color(0, 0, 0, wp_bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
 
     // Draw elements
-    this.forEachElement(function(element) {
+    this.elements.creation.elements[0].forEach(function(element) {
       y = element.draw(x, y, mouseX, mouseY);
 
       // Background behind elements
@@ -111,8 +114,13 @@ function wp_gui() {
     });
 
     wp_guiDepth = y;
-    // if (!wp_guiDepth) wp_guiDepth = y;
-    // wp_guiDepth = easeOut(wp_guiDepth, y, 4);
+    x = (Renderer.screen.getWidth() / 2) + 10, y = 20 + wp_waypointGuiGap;
+
+    this.elements.creation.elements[1].forEach(function(element) {
+      y = element.draw(x, y, mouseX, mouseY);
+    });
+
+    if (y > wp_guiDepth) wp_guiDepth = y;
   }
 }
 
@@ -291,7 +299,7 @@ function wp_waypointTitleElement(title) {
 
     Renderer.text(
       this.title,
-      x - (Renderer.getStringWidth(this.title) / 2),
+      (Renderer.screen.getWidth() / 2) - (Renderer.getStringWidth(this.title) / 2),
       this.y
     ).setColor(
       Renderer.color(
@@ -352,7 +360,7 @@ function wp_waypointTextElement(desc) {
     }*/
     Renderer.text(
       this.desc,
-      x - (Renderer.getStringWidth(this.desc) / 2),
+      x,
       y
     ).setColor(
       Renderer.color(
