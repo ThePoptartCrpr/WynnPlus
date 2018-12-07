@@ -3,39 +3,95 @@ var wp_waypointGui = new Gui();
 var wp_bgAlpha, wp_fgAlpha, wp_guiDepth, wp_waypointGuiElements;
 var wp_waypointGuiGap = 35;
 
-// Initializing and opening
-register('command', 'wp_openWaypointCreationGui').setName('createWaypoint');
+var WaypointGui = new wp_gui();
 
-function wp_openWaypointCreationGui() {
-  // Default values
-  wp_bgAlpha = 0, wp_fgAlpha = 0, wp_guiDepth = 0;
-  wp_waypointGuiElements = [];
+function wp_gui() {
+  this.editingId = undefined;
+  this.editing = false;
 
-  // Add elements
-  wp_waypointGuiElements.push(new wp_waypointBackButtonElement());
-  wp_waypointGuiElements.push(new wp_waypointTitleElement('Create Waypoint'));
-  wp_waypointGuiElements.push(new wp_waypointInvisElement());
-  wp_waypointGuiElements.push(new wp_waypointTextElement('Name:'));
-  wp_waypointGuiElements.push(new wp_waypointColorElement('Color'));
+  this.edit = function(id) {
+    this.editingId = id != undefined ? id : java.util.UUID.randomUUID();
+    this.editing = (id != undefined);
 
-  // Open
-  wp_waypointGui.open();
-}
+    // Default values
+    wp_bgAlpha = 0, wp_fgAlpha = 0, wp_guiDepth = 0;
+    wp_waypointGuiElements = [];
 
-wp_waypointGui.registerClicked(function(mouseX, mouseY, button) {
-  if (button == 0) {
+    // Add elements
+    wp_waypointGuiElements.push(new wp_waypointBackButtonElement());
+    wp_waypointGuiElements.push(new wp_waypointTitleElement(this.editing ? 'Edit Waypoint' : 'Create Waypoint'));
+    wp_waypointGuiElements.push(new wp_waypointInvisElement());
+    wp_waypointGuiElements.push(new wp_waypointTextElement('Name:'));
+    wp_waypointGuiElements.push(new wp_waypointColorElement('Color'));
+
+    // Open
+    wp_waypointGui.open();
+  }
+
+  this.click = function(mouseX, mouseY, button) {
+    if (button == 0) {
+      wp_waypointGuiElements.forEach(function(element) {
+        element.click();
+      });
+    }
+  }
+
+  this.release = function(mouseX, mouseY, button) {
+    if (button == 0) {
+      wp_waypointGuiElements.forEach(function(element) {
+        if (element.release) element.release();
+      });
+    }
+  }
+
+  this.step = function() {
+    wp_bgAlpha = easeOut(wp_bgAlpha, 150, 10);
+    wp_fgAlpha = easeOut(wp_fgAlpha, 100, 13);
+
+    // Step elements
     wp_waypointGuiElements.forEach(function(element) {
-      element.click();
+      element.step();
     });
   }
+
+  this.draw = function(mouseX, mouseY) {
+    // Variables
+    var x = Renderer.screen.getWidth() / 2, y = 20;
+
+    // Background
+    Renderer.drawRect(Renderer.color(0, 0, 0, wp_bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
+
+    // Draw elements
+    wp_waypointGuiElements.forEach(function(element) {
+      y = element.draw(x, y, mouseX, mouseY);
+
+      // Background behind elements
+      if (element instanceof wp_waypointInvisElement) Renderer.drawRect(Renderer.color(0, 0, 0, wp_fgAlpha), 50, y - 20, Renderer.screen.getWidth() - 100, wp_guiDepth - y);
+    });
+
+    wp_guiDepth = y;
+    // if (!wp_guiDepth) wp_guiDepth = y;
+    // wp_guiDepth = easeOut(wp_guiDepth, y, 4);
+  }
+}
+
+// Initializing and opening
+/*register('command', 'wp_openWaypointCreationGui').setName('createWaypoint');
+
+function wp_openWaypointCreationGui() {
+
+}*/
+
+register('command', function() {
+  WaypointGui.edit();
+}).setName('createWaypoint');
+
+wp_waypointGui.registerClicked(function(mouseX, mouseY, button) {
+  WaypointGui.click(mouseX, mouseY, button);
 });
 
 wp_waypointGui.registerMouseReleased(function(mouseX, mouseY, button) {
-  if (button == 0) {
-    wp_waypointGuiElements.forEach(function(element) {
-      if (element.release) element.release();
-    });
-  }
+  WaypointGui.release(mouseX, mouseY, button);
 });
 
 wp_waypointGui.registerKeyTyped(function(char, keyCode) {
@@ -46,34 +102,12 @@ wp_waypointGui.registerKeyTyped(function(char, keyCode) {
 
 register('step', function() {
   if (wp_waypointGui.isOpen()) {
-    wp_bgAlpha = easeOut(wp_bgAlpha, 150, 10);
-    wp_fgAlpha = easeOut(wp_fgAlpha, 100, 13);
-
-    // Step elements
-    wp_waypointGuiElements.forEach(function(element) {
-      element.step();
-    });
+    WaypointGui.step();
   }
 });
 
 wp_waypointGui.registerDraw(function(mouseX, mouseY) {
-  // Variables
-  var x = Renderer.screen.getWidth() / 2, y = 20;
-
-  // Background
-  Renderer.drawRect(Renderer.color(0, 0, 0, wp_bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
-
-  // Draw elements
-  wp_waypointGuiElements.forEach(function(element) {
-    y = element.draw(x, y, mouseX, mouseY);
-
-    // Background behind elements
-    if (element instanceof wp_waypointInvisElement) Renderer.drawRect(Renderer.color(0, 0, 0, wp_fgAlpha), 50, y - 20, Renderer.screen.getWidth() - 100, wp_guiDepth - y);
-  });
-
-  wp_guiDepth = y;
-  // if (!wp_guiDepth) wp_guiDepth = y;
-  // wp_guiDepth = easeOut(wp_guiDepth, y, 4);
+  WaypointGui.draw(mouseX, mouseY);
 });
 
 
