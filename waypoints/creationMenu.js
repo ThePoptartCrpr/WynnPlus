@@ -12,6 +12,7 @@ function wp_openWaypointCreationGui() {
   wp_waypointGuiElements = [];
 
   // Add elements
+  wp_waypointGuiElements.push(new wp_waypointBackButtonElement());
   wp_waypointGuiElements.push(new wp_waypointTitleElement('Create Waypoint'));
   wp_waypointGuiElements.push(new wp_waypointInvisElement());
   wp_waypointGuiElements.push(new wp_waypointTextElement('Name:'));
@@ -90,6 +91,103 @@ function wp_waypointBaseElement() {
 
   this.draw = function(x, y, mouseX, mouseY) {
 
+  }
+}
+
+// Back button
+function wp_waypointBackButtonElement() {
+  // this.text = "« Back";
+
+  this.mouseX = 0, this.mouseY = 0;
+
+  this.alpha = 0;
+  this.textColor = {
+    r: 255,
+    g: 255,
+    b: 255
+  };
+  this.backX = 25;
+  this.arrowX = 25;
+  this.arrowAlpha = 0;
+  this.rectAlpha = 0;
+
+  this.hovered = false;
+
+  this.step = function() {
+      this.alpha = easeOut(this.alpha, 255, 10);
+
+      if (this.mouseX >= 15 && this.mouseX < Renderer.getStringWidth("« Back") + 30 && this.mouseY >= 5 && this.mouseY < 24) this.hovered = true;
+      else this.hovered = false;
+
+      if (this.hovered) {
+        this.textColor.r = easeOut(this.textColor.r, 170, 10);
+        this.textColor.g = easeOut(this.textColor.g, 0, 10);
+        this.textColor.b = easeOut(this.textColor.b, 0, 10);
+
+        this.backX = easeOut(this.backX, 30, 5, 0.1);
+        this.arrowX = easeOut(this.arrowX, 20, 5, 0.1);
+
+        this.arrowAlpha = easeOut(this.arrowAlpha, 255, 10);
+        this.rectAlpha = easeOut(this.rectAlpha, 150, 10);
+      } else {
+        this.textColor.r = easeOut(this.textColor.r, 255, 10);
+        this.textColor.g = easeOut(this.textColor.g, 85, 10);
+        this.textColor.b = easeOut(this.textColor.b, 85, 10);
+
+        this.backX = easeOut(this.backX, 25, 12, 0.1);
+        this.arrowX = easeOut(this.arrowX, 25, 12, 0.1);
+
+        this.arrowAlpha = easeOut(this.arrowAlpha, 0, 10);
+        this.rectAlpha = easeOut(this.rectAlpha, 0, 10);
+      }
+  }
+
+  this.click = function() {
+
+  }
+
+  this.draw = function(x, y, mouseX, mouseY) {
+    this.mouseX = mouseX;
+    this.mouseY = mouseY;
+
+    // Background hover box
+    Renderer.drawRect(
+      Renderer.color(170, 170, 170, this.rectAlpha),
+      15,
+      5,
+      Renderer.getStringWidth("« Back") + 15,
+      19
+    );
+
+    // Back
+    Renderer.text(
+      "Back",
+      this.backX,
+      10
+    ).setColor(
+      Renderer.color(
+        this.textColor.r,
+        this.textColor.g,
+        this.textColor.b,
+        this.alpha
+      )
+    ).setShadow(true).draw();
+
+    // Arrow
+    Renderer.text(
+      "«",
+      this.arrowX,
+      10
+    ).setColor(
+      Renderer.color(
+        this.textColor.r,
+        this.textColor.g,
+        this.textColor.b,
+        this.arrowAlpha
+      )
+    ).setShadow(true).draw();
+
+    return y;
   }
 }
 
