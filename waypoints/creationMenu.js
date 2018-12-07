@@ -6,31 +6,71 @@ var wp_waypointGuiGap = 35;
 var WaypointGui = new wp_gui();
 
 function wp_gui() {
+  // Base variables
   this.editingId = undefined;
   this.editing = false;
+  this.states = [];
+
+  // Utility render variables
+  this.bgAlpha = 0;
+  this.fgAlpha = 0;
+  this.guiDepth = 0;
+
+  this.elements = {
+    list: {
+      type: 'list',
+      elements: []
+    },
+    creation: {
+      type: 'column',
+      elements: [
+        // Left-hand column
+        [],
+        // Right-hand column
+        []
+      ]
+    }
+  };
 
   this.edit = function(id) {
     this.editingId = id != undefined ? id : java.util.UUID.randomUUID();
     this.editing = (id != undefined);
 
     // Default values
-    wp_bgAlpha = 0, wp_fgAlpha = 0, wp_guiDepth = 0;
-    wp_waypointGuiElements = [];
+    this.bgAlpha = 0, this.fgAlpha = 0, this.guiDepth = 0;
+    this.states = ['creation'];
+    this.elements.creation.elements = [
+      [],
+      []
+    ]
 
     // Add elements
-    wp_waypointGuiElements.push(new wp_waypointBackButtonElement());
-    wp_waypointGuiElements.push(new wp_waypointTitleElement(this.editing ? 'Edit Waypoint' : 'Create Waypoint'));
-    wp_waypointGuiElements.push(new wp_waypointInvisElement());
-    wp_waypointGuiElements.push(new wp_waypointTextElement('Name:'));
-    wp_waypointGuiElements.push(new wp_waypointColorElement('Color'));
+    this.elements.creation.elements[0].push(new wp_waypointBackButtonElement());
+    this.elements.creation.elements[0].push(new wp_waypointTitleElement(this.editing ? 'Edit Waypoint' : 'Create Waypoint'));
+    this.elements.creation.elements[0].push(new wp_waypointInvisElement());
+    this.elements.creation.elements[0].push(new wp_waypointTextElement('Name:'));
+    this.elements.creation.elements[0].push(new wp_waypointColorElement('Color'));
 
     // Open
     wp_waypointGui.open();
   }
 
+  this.forEachElement = function(func) {
+    this.states.forEach(function(state) {
+      if (WaypointGui.elements[state].type === 'list') WaypointGui.elements[state].elements.forEach(function(element) {
+        func(element);
+      });
+      else if (WaypointGui.elements[state].type === 'column') WaypointGui.elements[state].elements.forEach(function(column) {
+        column.forEach(function(element) {
+          func(element);
+        });
+      });
+    });
+  }
+
   this.click = function(mouseX, mouseY, button) {
     if (button == 0) {
-      wp_waypointGuiElements.forEach(function(element) {
+      this.forEachElement(function(element) {
         element.click();
       });
     }
@@ -38,18 +78,19 @@ function wp_gui() {
 
   this.release = function(mouseX, mouseY, button) {
     if (button == 0) {
-      wp_waypointGuiElements.forEach(function(element) {
+      this.forEachElement(function(element) {
         if (element.release) element.release();
       });
     }
   }
 
   this.step = function() {
+    // Global values
     wp_bgAlpha = easeOut(wp_bgAlpha, 150, 10);
     wp_fgAlpha = easeOut(wp_fgAlpha, 100, 13);
 
     // Step elements
-    wp_waypointGuiElements.forEach(function(element) {
+    this.forEachElement(function(element) {
       element.step();
     });
   }
@@ -62,7 +103,7 @@ function wp_gui() {
     Renderer.drawRect(Renderer.color(0, 0, 0, wp_bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
 
     // Draw elements
-    wp_waypointGuiElements.forEach(function(element) {
+    this.forEachElement(function(element) {
       y = element.draw(x, y, mouseX, mouseY);
 
       // Background behind elements
@@ -94,8 +135,9 @@ wp_waypointGui.registerMouseReleased(function(mouseX, mouseY, button) {
   WaypointGui.release(mouseX, mouseY, button);
 });
 
+// TODO: implement this into WaypointGui object
 wp_waypointGui.registerKeyTyped(function(char, keyCode) {
-  wp_waypointGuiElements.forEach(function(element) {
+  WaypointGui.forEachElement(function(element) {
     if (element.onKeyTyped) element.onKeyTyped();
   });
 });
