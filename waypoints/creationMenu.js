@@ -9,13 +9,21 @@ function wp_gui() {
   // Base variables
   this.editingId = undefined;
   this.editing = false;
-  this.states = [];
+  this.states = {
+    list: {
+      render: false
+    },
+    creation: {
+      render: false
+    }
+  };
 
   // Utility render variables
   this.bgAlpha = 0;
   this.fgAlpha = 0;
   this.guiDepth = 0;
 
+  // TODO: merge elements with states
   this.elements = {
     list: {
       type: 'list',
@@ -38,7 +46,7 @@ function wp_gui() {
 
     // Default values
     this.bgAlpha = 0, this.fgAlpha = 0, this.guiDepth = 0;
-    this.states = ['creation'];
+    this.states.creation.render = true;
     this.elements.creation.elements = [
       [],
       []
@@ -59,7 +67,9 @@ function wp_gui() {
   }
 
   this.forEachElement = function(func) {
-    this.states.forEach(function(state) {
+    Object.keys(this.states).forEach(function(state) {
+      print(state);
+      if (!WaypointGui.states[state].render) return;
       if (WaypointGui.elements[state].type === 'list') WaypointGui.elements[state].elements.forEach(function(element) {
         func(element);
       });
@@ -146,7 +156,7 @@ wp_waypointGui.registerMouseReleased(function(mouseX, mouseY, button) {
 // TODO: implement this into WaypointGui object
 wp_waypointGui.registerKeyTyped(function(char, keyCode) {
   WaypointGui.forEachElement(function(element) {
-    if (element.onKeyTyped) element.onKeyTyped();
+    if (element.onKeyTyped) element.onKeyTyped(char, keyCode);
   });
 });
 
