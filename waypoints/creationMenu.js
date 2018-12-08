@@ -22,6 +22,7 @@ function wp_gui() {
   this.bgAlpha = 0;
   this.fgAlpha = 0;
   this.guiDepth = 0;
+  this.elementAlpha = 0;
 
   // TODO: merge elements with states
   this.elements = {
@@ -44,8 +45,8 @@ function wp_gui() {
     this.editingId = id != undefined ? id : java.util.UUID.randomUUID();
     this.editing = (id != undefined);
 
-    // Default values
-    this.bgAlpha = 0, this.fgAlpha = 0, this.guiDepth = 0;
+    // Reset default values
+    this.bgAlpha = 0, this.fgAlpha = 0, this.guiDepth = 0, this.elementAlpha = 0;
     this.states.creation.render = true;
     this.elements.creation.elements = [
       [],
@@ -61,6 +62,7 @@ function wp_gui() {
 
     this.elements.creation.elements[1].push(new wp_waypointInvisElement());
     this.elements.creation.elements[1].push(new wp_waypointTextElement('Test!'));
+    this.elements.creation.elements[1].push(new wp_waypointSaveButtonElement());
 
     // Open
     wp_waypointGui.open();
@@ -68,7 +70,6 @@ function wp_gui() {
 
   this.forEachElement = function(func) {
     Object.keys(this.states).forEach(function(state) {
-      print(state);
       if (!WaypointGui.states[state].render) return;
       if (WaypointGui.elements[state].type === 'list') WaypointGui.elements[state].elements.forEach(function(element) {
         func(element);
@@ -99,8 +100,9 @@ function wp_gui() {
 
   this.step = function() {
     // Global values
-    wp_bgAlpha = easeOut(wp_bgAlpha, 150, 10);
-    wp_fgAlpha = easeOut(wp_fgAlpha, 100, 13);
+    this.bgAlpha = easeOut(this.bgAlpha, 150, 10);
+    this.fgAlpha = easeOut(this.fgAlpha, 100, 13);
+    this.elementAlpha = easeOut(this.elementAlpha, 255, 10);
 
     // Step elements
     this.forEachElement(function(element) {
@@ -111,26 +113,27 @@ function wp_gui() {
   this.draw = function(mouseX, mouseY) {
     // Variables
     var x = 100, y = 20;
+    var parent = this;
 
     // Background
-    Renderer.drawRect(Renderer.color(0, 0, 0, wp_bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
+    Renderer.drawRect(Renderer.color(0, 0, 0, this.bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
 
     // Draw elements
     this.elements.creation.elements[0].forEach(function(element) {
-      y = element.draw(x, y, mouseX, mouseY);
+      y = element.draw(x, y, mouseX, mouseY, parent);
 
       // Background behind elements
-      if (element instanceof wp_waypointInvisElement) Renderer.drawRect(Renderer.color(0, 0, 0, wp_fgAlpha), 50, y - 20, Renderer.screen.getWidth() - 100, wp_guiDepth - y);
+      if (element instanceof wp_waypointInvisElement) Renderer.drawRect(Renderer.color(0, 0, 0, WaypointGui.fgAlpha), 50, y - 20, Renderer.screen.getWidth() - 100, WaypointGui.guiDepth - y);
     });
 
-    wp_guiDepth = y;
+    this.guiDepth = y;
     x = (Renderer.screen.getWidth() / 2) + 10, y = 20 + wp_waypointGuiGap;
 
     this.elements.creation.elements[1].forEach(function(element) {
-      y = element.draw(x, y, mouseX, mouseY);
+      y = element.draw(x, y, mouseX, mouseY, parent);
     });
 
-    if (y > wp_guiDepth) wp_guiDepth = y;
+    if (y > this.guiDepth) this.guiDepth = y;
   }
 }
 
@@ -196,9 +199,9 @@ function wp_waypointBackButtonElement() {
 
   this.alpha = 0;
   this.textColor = {
-    r: 255,
-    g: 255,
-    b: 255
+    r: 170,
+    g: 0,
+    b: 0
   };
   this.backX = 25;
   this.arrowX = 25;
@@ -348,26 +351,77 @@ function wp_waypointInvisElement() {
 }
 
 function wp_waypointTextElement(desc) {
-  this.text = "";
+  this.text = '';
   this.desc = desc;
-  // this.yGoal = undefined;
-  // this.y = undefined;
   this.alpha = 0;
 
+  this.selected = false;
+  this.hovered = false;
+
+  this.bgColor = 0;
+
+  this.cursor = {
+    alpha: 255,
+    going: 'down',
+    timer: 10
+  };
+
+  this.x = 0, this.y = 0;
+  this.mouseX = 0, this.mouseY = 0;
+
   this.step = function() {
-    // if (this.y) this.y = easeOut(this.y, this.yGoal, 6);
     this.alpha = easeOut(this.alpha, 255, 10);
+
+    // Hover calculation
+    if (
+      this.mouseX >= this.x + Renderer.getStringWidth(this.desc) + 6
+      && this.mouseX < (this.x + Renderer.getStringWidth(this.desc) + 6) + ((Renderer.screen.getWidth() / 2) - Renderer.getStringWidth(this.desc) - 116)
+      && this.mouseY >= this.y - 5
+      && this.mouseY < this.y + 14
+    ) this.hovered = true;
+    else this.hovered = false;
+
+    if (this.hovered && (!this.selected)) this.bgColor = easeOut(this.bgColor, 30, 5);
+    else this.bgColor = easeOut(this.bgColor, 0, 15);
+
+    if (this.selected) {
+      if (this.cursor.going === 'down') {
+        if (this.cursor.alpha === 0) {
+          if (this.cursor.timer > 0) this.cursor.timer--;
+          else {
+            this.cursor.timer = 10;
+            this.cursor.going = 'up';
+          }
+        }
+        else this.cursor.alpha = easeOut(this.cursor.alpha, 0, 5);
+      } else {
+        if (this.cursor.alpha === 255) {
+          if (this.cursor.timer > 0) this.cursor.timer--;
+          else {
+            this.cursor.timer = 10;
+            this.cursor.going = 'down';
+          }
+        }
+        else this.cursor.alpha = easeOut(this.cursor.alpha, 255, 5);
+      }
+    }
+    else this.cursor.alpha = 0;
   }
 
   this.click = function() {
+    if (this.hovered) this.selected = true;
+    else this.selected = false;
+  }
 
+  this.onKeyTyped = function(char, keyCode) {
+    if ((!this.selected) || (Renderer.getStringWidth(this.text + char) >= (Renderer.screen.getWidth() / 2) - Renderer.getStringWidth(this.desc) - 124)) return;
+    if (char) this.text += char;
   }
 
   this.draw = function(x, y, mouseX, mouseY) {
-    /*if (!this.y) {
-      this.yGoal = y;
-      this.y = y + 10;
-    }*/
+    this.x = x, this.y = y;
+    this.mouseX = mouseX, this.mouseY = mouseY;
+
     Renderer.text(
       this.desc,
       x,
@@ -380,6 +434,47 @@ function wp_waypointTextElement(desc) {
         this.alpha
       )
     ).setShadow(true).draw();
+
+    // Box outline
+    Renderer.drawRect(
+      Renderer.color(255, 255, 255, this.alpha),
+      x + Renderer.getStringWidth(this.desc) + 6,
+      y - 5,
+      (Renderer.screen.getWidth() / 2) - Renderer.getStringWidth(this.desc) - 116,
+      19
+    );
+
+    // Text input box
+    Renderer.drawRect(
+      Renderer.color(this.bgColor, this.bgColor, this.bgColor, this.alpha),
+      x + Renderer.getStringWidth(this.desc) + 7,
+      y - 4,
+      (Renderer.screen.getWidth() / 2) - Renderer.getStringWidth(this.desc) - 118,
+      17
+    );
+
+    // Text input
+    Renderer.text(
+      this.text,
+      x + Renderer.getStringWidth(this.desc) + 10,
+      y
+    ).setColor(
+      Renderer.color(
+        255,
+        255,
+        255,
+        this.alpha
+      )
+    ).setShadow(true).draw();
+
+    // Cursor
+    if (this.selected) Renderer.drawRect(
+      Renderer.color(255, 255, 255, this.cursor.alpha),
+      x + Renderer.getStringWidth(this.desc) + 10 + Renderer.getStringWidth(this.text) + 1,
+      y,
+      2,
+      9
+    );
 
     return y + wp_waypointGuiGap;
   }
@@ -560,5 +655,96 @@ function wp_waypointColorElement(title) {
     )
 
     return y + 140;
+  }
+}
+
+function wp_waypointSaveButtonElement() {
+  this.mouseX = 0, this.mouseY = 0;
+
+  this.textColor = {
+    r: 170,
+    g: 0,
+    b: 0
+  };
+  this.saveX = 25;
+  this.checkX = 25;
+  this.checkAlpha = 0;
+  this.rectAlpha = 0;
+
+  this.hovered = false;
+
+  this.step = function() {
+    if (this.mouseX >= 15 && this.mouseX < Renderer.getStringWidth("« Back") + 30 && this.mouseY >= 5 && this.mouseY < 24) this.hovered = true;
+    else this.hovered = false;
+
+    if (this.hovered) {
+      this.textColor.r = easeOut(this.textColor.r, 170, 10);
+      this.textColor.g = easeOut(this.textColor.g, 0, 10);
+      this.textColor.b = easeOut(this.textColor.b, 0, 10);
+
+      this.backX = easeOut(this.backX, 30, 5, 0.1);
+      this.arrowX = easeOut(this.arrowX, 20, 5, 0.1);
+
+      this.arrowAlpha = easeOut(this.arrowAlpha, 255, 10);
+      this.rectAlpha = easeOut(this.rectAlpha, 150, 10);
+    } else {
+      this.textColor.r = easeOut(this.textColor.r, 255, 10);
+      this.textColor.g = easeOut(this.textColor.g, 85, 10);
+      this.textColor.b = easeOut(this.textColor.b, 85, 10);
+
+      this.backX = easeOut(this.backX, 25, 12, 0.1);
+      this.arrowX = easeOut(this.arrowX, 25, 12, 0.1);
+
+      this.arrowAlpha = easeOut(this.arrowAlpha, 0, 10);
+      this.rectAlpha = easeOut(this.rectAlpha, 0, 10);
+    }
+  }
+
+  this.click = function() {
+
+  }
+
+  this.draw = function(x, y, mouseX, mouseY, menu) {
+    this.mouseX = mouseX;
+    this.mouseY = mouseY;
+
+    // Background hover box
+    Renderer.drawRect(
+      Renderer.color(170, 170, 170, this.rectAlpha),
+      15,
+      5,
+      Renderer.getStringWidth("« Back") + 15,
+      19
+    );
+
+    // Back
+    Renderer.text(
+      "Back",
+      this.backX,
+      10
+    ).setColor(
+      Renderer.color(
+        this.textColor.r,
+        this.textColor.g,
+        this.textColor.b,
+        this.alpha
+      )
+    ).setShadow(true).draw();
+
+    // Arrow
+    Renderer.text(
+      "«",
+      this.arrowX,
+      10
+    ).setColor(
+      Renderer.color(
+        this.textColor.r,
+        this.textColor.g,
+        this.textColor.b,
+        this.arrowAlpha
+      )
+    ).setShadow(true).draw();
+
+    return y;
   }
 }
