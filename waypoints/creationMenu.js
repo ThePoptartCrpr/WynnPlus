@@ -11,18 +11,23 @@ function wp_gui() {
   this.editing = false;
   this.states = {
     list: {
-      render: false
+      render: false,
+      state: 'closing',
+      elementAlpha: 0,
+      guiDepth: 0
     },
     creation: {
-      render: false
+      render: false,
+      state: 'closing',
+      elementAlpha: 0,
+      guiDepth: 0
     }
   };
 
   // Utility render variables
+  // TODO: merge into states as well
   this.bgAlpha = 0;
   this.fgAlpha = 0;
-  this.guiDepth = 0;
-  this.elementAlpha = 0;
 
   // TODO: merge elements with states
   this.elements = {
@@ -46,8 +51,9 @@ function wp_gui() {
     this.editing = (id != undefined);
 
     // Reset default values
-    this.bgAlpha = 0, this.fgAlpha = 0, this.guiDepth = 0, this.elementAlpha = 0;
+    this.bgAlpha = 0, this.fgAlpha = 0, this.states.creation.guiDepth = 0, this.states.creation.elementAlpha = 0;
     this.states.creation.render = true;
+    this.states.creation.state = 'opening';
     this.elements.creation.elements = [
       [],
       []
@@ -62,7 +68,7 @@ function wp_gui() {
 
     this.elements.creation.elements[1].push(new wp_waypointInvisElement());
     this.elements.creation.elements[1].push(new wp_waypointTextElement('Test!'));
-    this.elements.creation.elements[1].push(new wp_waypointSaveButtonElement());
+    // this.elements.creation.elements[1].push(new wp_waypointSaveButtonElement());
 
     // Open
     wp_waypointGui.open();
@@ -102,7 +108,7 @@ function wp_gui() {
     // Global values
     this.bgAlpha = easeOut(this.bgAlpha, 150, 10);
     this.fgAlpha = easeOut(this.fgAlpha, 100, 13);
-    this.elementAlpha = easeOut(this.elementAlpha, 255, 10);
+    this.states.creation.elementAlpha = easeOut(this.states.creation.elementAlpha, 255, 10);
 
     // Step elements
     this.forEachElement(function(element) {
@@ -113,27 +119,27 @@ function wp_gui() {
   this.draw = function(mouseX, mouseY) {
     // Variables
     var x = 100, y = 20;
-    var parent = this;
+    var state = this.states.creation;
 
     // Background
     Renderer.drawRect(Renderer.color(0, 0, 0, this.bgAlpha), 0, 0, Renderer.screen.getWidth(), Renderer.screen.getHeight());
 
     // Draw elements
     this.elements.creation.elements[0].forEach(function(element) {
-      y = element.draw(x, y, mouseX, mouseY, parent);
+      y = element.draw(x, y, mouseX, mouseY, state);
 
       // Background behind elements
-      if (element instanceof wp_waypointInvisElement) Renderer.drawRect(Renderer.color(0, 0, 0, WaypointGui.fgAlpha), 50, y - 20, Renderer.screen.getWidth() - 100, WaypointGui.guiDepth - y);
+      if (element instanceof wp_waypointInvisElement) Renderer.drawRect(Renderer.color(0, 0, 0, WaypointGui.fgAlpha), 50, y - 20, Renderer.screen.getWidth() - 100, WaypointGui.states.creation.guiDepth - y);
     });
 
-    this.guiDepth = y;
+    this.states.creation.guiDepth = y;
     x = (Renderer.screen.getWidth() / 2) + 10, y = 20 + wp_waypointGuiGap;
 
     this.elements.creation.elements[1].forEach(function(element) {
-      y = element.draw(x, y, mouseX, mouseY, parent);
+      y = element.draw(x, y, mouseX, mouseY, state);
     });
 
-    if (y > this.guiDepth) this.guiDepth = y;
+    if (y > this.states.creation.guiDepth) this.states.creation.guiDepth = y;
   }
 }
 
@@ -674,7 +680,7 @@ function wp_waypointSaveButtonElement() {
   this.hovered = false;
 
   this.step = function() {
-    if (this.mouseX >= 15 && this.mouseX < Renderer.getStringWidth("« Back") + 30 && this.mouseY >= 5 && this.mouseY < 24) this.hovered = true;
+    if (this.mouseX >= 15 && this.mouseX < Renderer.getStringWidth("✓ Save") + 30 && this.mouseY >= 5 && this.mouseY < 24) this.hovered = true;
     else this.hovered = false;
 
     if (this.hovered) {
@@ -682,20 +688,20 @@ function wp_waypointSaveButtonElement() {
       this.textColor.g = easeOut(this.textColor.g, 0, 10);
       this.textColor.b = easeOut(this.textColor.b, 0, 10);
 
-      this.backX = easeOut(this.backX, 30, 5, 0.1);
-      this.arrowX = easeOut(this.arrowX, 20, 5, 0.1);
+      this.saveX = easeOut(this.saveX, 30, 5, 0.1);
+      this.checkX = easeOut(this.checkX, 20, 5, 0.1);
 
-      this.arrowAlpha = easeOut(this.arrowAlpha, 255, 10);
+      this.checkAlpha = easeOut(this.checkAlpha, 255, 10);
       this.rectAlpha = easeOut(this.rectAlpha, 150, 10);
     } else {
       this.textColor.r = easeOut(this.textColor.r, 255, 10);
       this.textColor.g = easeOut(this.textColor.g, 85, 10);
       this.textColor.b = easeOut(this.textColor.b, 85, 10);
 
-      this.backX = easeOut(this.backX, 25, 12, 0.1);
-      this.arrowX = easeOut(this.arrowX, 25, 12, 0.1);
+      this.saveX = easeOut(this.saveX, 25, 12, 0.1);
+      this.checkX = easeOut(this.checkX, 25, 12, 0.1);
 
-      this.arrowAlpha = easeOut(this.arrowAlpha, 0, 10);
+      this.checkAlpha = easeOut(this.checkAlpha, 0, 10);
       this.rectAlpha = easeOut(this.rectAlpha, 0, 10);
     }
   }
@@ -704,44 +710,43 @@ function wp_waypointSaveButtonElement() {
 
   }
 
-  this.draw = function(x, y, mouseX, mouseY, menu) {
-    this.mouseX = mouseX;
-    this.mouseY = mouseY;
+  this.draw = function(x, y, mouseX, mouseY, state) {
+    this.mouseX = mouseX, this.mouseY = mouseY;
 
     // Background hover box
     Renderer.drawRect(
       Renderer.color(170, 170, 170, this.rectAlpha),
       15,
-      5,
-      Renderer.getStringWidth("« Back") + 15,
+      state.guiDepth + 5,
+      Renderer.getStringWidth("✓ Save") + 15,
       19
     );
 
-    // Back
+    // Save
     Renderer.text(
-      "Back",
-      this.backX,
-      10
+      "Save",
+      this.saveX,
+      state.guiDepth + 10
     ).setColor(
       Renderer.color(
         this.textColor.r,
         this.textColor.g,
         this.textColor.b,
-        this.alpha
+        state.elementAlpha
       )
     ).setShadow(true).draw();
 
-    // Arrow
+    // Check
     Renderer.text(
-      "«",
-      this.arrowX,
-      10
+      "✓",
+      this.checkX,
+      state.guiDepth + 10
     ).setColor(
       Renderer.color(
         this.textColor.r,
         this.textColor.g,
         this.textColor.b,
-        this.arrowAlpha
+        this.checkAlpha
       )
     ).setShadow(true).draw();
 
