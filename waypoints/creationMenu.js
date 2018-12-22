@@ -14,14 +14,23 @@ function wp_gui() {
       render: false,
       state: 'closing',
       elementAlpha: 0,
-      guiDepth: 0
+      guiDepth: 0,
+      xOffset: 0,
+      direction: 'left',
+      bgAlpha: 0,
     },
     creation: {
       render: false,
       state: 'closing',
       elementAlpha: 0,
-      guiDepth: 0
-    }
+      guiDepth: 0,
+      xOffset: 0,
+      direction: 'left',
+      bgAlpha: 0,
+    },
+    global: {
+      bgAlpha: 0,
+    },
   };
 
   // Utility render variables

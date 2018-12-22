@@ -1,5 +1,5 @@
 // Temporary waypoints
-var wp_waypoints = {
+/*var wp_waypoints = {
   '56011fc9-00c2-43eb-8353-a56880d1d0bd': {
     'name': 'Test Waypoint',
     'coordinates': [
@@ -40,6 +40,8 @@ register('renderOverlay', function(partialTicks) {
 
     // Calculate position on screen
     var waypointAngle = Math.atan(xDiff / zDiff);
+
+    // ChatLib.chat('yaw: ' + ((Player.getYaw() + 180) % 90));
 
     // var diffAtAxis = Math.tan(Player.getYaw() + 90);
 
@@ -95,4 +97,4 @@ register('renderOverlay', function(partialTicks) {
       25
     );
   }
-});
+});*/
